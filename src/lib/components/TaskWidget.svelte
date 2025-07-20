@@ -30,7 +30,10 @@
         kimaiStore,
         sessionStore,
         settingsStore,
+        timerStore,
     } from "$lib/stores/index.js";
+    import TimerDisplay from "$lib/components/TimerDisplay.svelte";
+    import PlayButton from "$lib/components/PlayButton.svelte";
 
     // Component state using Svelte 5 runes
     let tasks = $state<KimaiTask[]>([]);
@@ -82,9 +85,7 @@
         }),
     );
 
-    let canStart = $derived(
-        selectedTask && selectedTask.status === "open" && !isStarting,
-    );
+    let canStart = $derived(selectedTask && !isStarting);
     let canStop = $derived(sessionStore.currentTask && !isStopping);
     let isRunning = $derived(!!sessionStore.currentTask);
 
@@ -106,10 +107,6 @@
             loadTasks();
         }
     });
-    $inspect(kimaiStore.isConnected);
-    $inspect(kimaiStore.isConnecting);
-    $inspect(filteredTasks);
-    $inspect(tasks);
 
     // Event handlers
     async function loadTasks() {
@@ -305,6 +302,21 @@
         {/if}
     </div>
 
+    <!-- Debug Info (remove in production) -->
+    <div
+        class="debug-info"
+        style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;"
+    >
+        <div>
+            Selected Task: {selectedTask
+                ? `${selectedTask.title} (${selectedTask.status})`
+                : "None"}
+        </div>
+        <div>Can Start: {canStart}</div>
+        <div>Is Running: {isRunning}</div>
+        <div>Tasks Loaded: {tasks.length}</div>
+    </div>
+
     <!-- Header -->
     <div class="header">
         <h2>Task Management</h2>
@@ -453,7 +465,7 @@
                 <Square size={16} />
                 {isStopping ? "Stopping..." : "Stop Task"}
             </button>
-        {:else}
+        {:else if selectedTask}
             <button
                 class="btn btn-start"
                 onclick={handleStart}
@@ -462,17 +474,21 @@
                 <Play size={16} />
                 {isStarting ? "Starting..." : "Start Task"}
             </button>
-        {/if}
 
-        {#if selectedTask && selectedTask.status === "open"}
-            <button
-                class="btn btn-close"
-                onclick={handleClose}
-                disabled={isRunning}
-            >
-                <CheckCircle size={16} />
-                Close Task
-            </button>
+            {#if selectedTask.status === "open" && !isRunning}
+                <button
+                    class="btn btn-close"
+                    onclick={handleClose}
+                    disabled={isRunning}
+                >
+                    <CheckCircle size={16} />
+                    Close Task
+                </button>
+            {/if}
+        {:else}
+            <div class="no-task-selected">
+                <p>Select a task from the list above to start working</p>
+            </div>
         {/if}
     </div>
 
@@ -494,6 +510,16 @@
                 <div class="task-item">
                     <strong>Started:</strong>
                     {formatDateTime(sessionStore.currentTask.begin)}
+                </div>
+            </div>
+
+            <!-- Timer Display -->
+            <div class="timer-section">
+                <div class="timer-display">
+                    <TimerDisplay size="medium" />
+                </div>
+                <div class="timer-controls">
+                    <PlayButton size="medium" showReset={true} />
                 </div>
             </div>
         </div>
@@ -721,6 +747,18 @@
         display: flex;
         gap: 0.5rem;
         justify-content: center;
+        align-items: center;
+        min-height: 60px;
+    }
+
+    .no-task-selected {
+        text-align: center;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    .no-task-selected p {
+        margin: 0;
     }
 
     .btn {
@@ -784,6 +822,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        margin-bottom: 1rem;
     }
 
     .task-info .task-item {
@@ -797,6 +836,28 @@
 
     .task-info .task-item strong {
         min-width: 80px;
+    }
+
+    .timer-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: var(--bg-secondary);
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .timer-display {
+        display: flex;
+        justify-content: center;
+    }
+
+    .timer-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .loading {

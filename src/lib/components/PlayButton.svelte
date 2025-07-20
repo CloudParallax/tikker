@@ -50,16 +50,16 @@
         return Play;
     }
 
-    // Get button color
-    function getButtonColor(): string {
+    // Get button color classes
+    function getButtonColorClasses(): string {
         if (timerState.status === "running") {
-            return "var(--success-color)";
+            return "text-green-600 dark:text-green-400";
         } else if (timerState.status === "paused") {
-            return "var(--warning-color)";
+            return "text-yellow-600 dark:text-yellow-400";
         } else if (timerState.status === "stopped") {
-            return "var(--danger-color)";
+            return "text-red-600 dark:text-red-400";
         }
-        return "var(--primary-color)";
+        return "text-blue-600 dark:text-blue-400";
     }
 
     // Get button title
@@ -79,12 +79,16 @@
     const ButtonIcon = getButtonIcon();
 </script>
 
-<div class="play-button-container {className}">
+<div class="flex items-center gap-2 {className}">
     <button
-        class="play-button {size}"
+        class="flex items-center justify-center rounded-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 {getButtonColorClasses()} {size ===
+        'small'
+            ? 'w-8 h-8'
+            : size === 'medium'
+              ? 'w-10 h-10'
+              : 'w-12 h-12'}"
         onclick={handleClick}
         title={getButtonTitle()}
-        style="color: {getButtonColor()}"
     >
         <ButtonIcon
             size={size === "small" ? 16 : size === "medium" ? 20 : 24}
@@ -93,7 +97,12 @@
 
     {#if showReset && timerState.status !== "idle"}
         <button
-            class="reset-button {size}"
+            class="flex items-center justify-center rounded-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-500 {size ===
+            'small'
+                ? 'w-8 h-8'
+                : size === 'medium'
+                  ? 'w-10 h-10'
+                  : 'w-12 h-12'}"
             onclick={handleReset}
             title="Reset Timer"
         >
@@ -103,61 +112,3 @@
         </button>
     {/if}
 </div>
-
-<style>
-    .play-button-container {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .play-button,
-    .reset-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.2s;
-        background: var(--bg-primary);
-        border: 2px solid var(--border-color);
-    }
-
-    .play-button:hover,
-    .reset-button:hover {
-        background: var(--bg-hover);
-        transform: scale(1.05);
-    }
-
-    .play-button:active,
-    .reset-button:active {
-        transform: scale(0.95);
-    }
-
-    .reset-button {
-        color: var(--text-secondary);
-        border-color: var(--border-color);
-    }
-
-    .reset-button:hover {
-        color: var(--text-primary);
-        border-color: var(--text-primary);
-    }
-
-    /* Size variants */
-    .small {
-        width: 32px;
-        height: 32px;
-    }
-
-    .medium {
-        width: 40px;
-        height: 40px;
-    }
-
-    .large {
-        width: 48px;
-        height: 48px;
-    }
-</style>

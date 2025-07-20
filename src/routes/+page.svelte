@@ -17,8 +17,8 @@
 
   // Application state
   let showSettings = $state(false);
-  let showTasks = $state(false);
-  let currentTab = $state<"timer" | "tasks">("timer");
+  let showTasks = $state(true);
+  let currentTab = $state<"timer" | "tasks">("tasks");
   let isLoading = $state(true);
 
   // Get store states
@@ -75,35 +75,43 @@
   <title>Tikker - Time Tracking</title>
 </svelte:head>
 {#if isLoading}
-  <div class="loading-screen">
-    <div class="loading-spinner"></div>
-    <p>Loading Tikker...</p>
+  <div class="flex items-center justify-center h-full">
+    <div
+      class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+    ></div>
+    <p class="ml-3 text-gray-600 dark:text-gray-400">Loading Tikker...</p>
   </div>
 {:else}
-  <div class="app-container">
+  <div
+    class="flex flex-col h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+  >
     <!-- Header -->
-    <header class="app-header">
-      <div class="header-left">
-        <h1 class="app-title">Tikker</h1>
+    <header
+      class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+    >
+      <div class="flex items-center gap-3">
+        <h1 class="text-xl font-semibold">Tikker</h1>
         <StatusIndicator size="small" />
       </div>
 
-      <div class="header-center">
-        <div class="connection-status">
+      <div class="flex items-center gap-2">
+        <div class="text-sm">
           {#if connectionState.isConnected}
-            <span class="status-connected">Connected</span>
+            <span class="text-green-600 dark:text-green-400">Connected</span>
           {:else if connectionState.isConnecting}
-            <span class="status-connecting">Connecting...</span>
+            <span class="text-yellow-600 dark:text-yellow-400"
+              >Connecting...</span
+            >
           {:else}
-            <span class="status-disconnected">Disconnected</span>
+            <span class="text-red-600 dark:text-red-400">Disconnected</span>
           {/if}
         </div>
       </div>
 
-      <div class="header-right">
+      <div class="flex items-center gap-2">
         <ProfileSelector on:select={handleProfileSelect} />
         <button
-          class="header-btn"
+          class="flex items-center justify-center w-10 h-10 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-blue-500"
           onclick={() => (showSettings = true)}
           title="Settings"
         >
@@ -113,57 +121,74 @@
     </header>
 
     <!-- Main Content -->
-    <main class="app-main">
+    <main class="flex-1 overflow-hidden flex flex-col">
       {#if !currentProfile}
-        <!-- No Profile Setup -->
-        <div class="setup-screen">
-          <div class="setup-content">
-            <User size={64} />
-            <h2>Welcome to Tikker</h2>
-            <p>
-              Set up your first Kimai profile to get started with time tracking.
+        <!-- Setup Screen -->
+        <div class="flex items-center justify-center h-full p-8">
+          <div class="text-center max-w-md text-gray-600 dark:text-gray-400">
+            <h2
+              class="text-2xl font-semibold mb-2 text-gray-900 dark:text-gray-100"
+            >
+              Welcome to Tikker
+            </h2>
+            <p class="mb-6">
+              To get started, you need to configure your Kimai connection
+              settings.
             </p>
             <button
-              class="btn btn-primary"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
               onclick={() => (showSettings = true)}
             >
               <Settings size={16} />
-              Configure Profile
+              Open Settings
             </button>
           </div>
         </div>
-      {:else if !connectionState.isConnected}
-        <!-- Connection Error -->
-        <div class="error-screen">
-          <div class="error-content">
-            <h2>Connection Error</h2>
-            <p>
-              {connectionState.error || "Failed to connect to Kimai server"}
+      {:else if connectionState.error}
+        <!-- Error Screen -->
+        <div class="flex items-center justify-center h-full p-8">
+          <div class="text-center max-w-md text-gray-600 dark:text-gray-400">
+            <h2
+              class="text-2xl font-semibold mb-2 text-red-600 dark:text-red-400"
+            >
+              Connection Error
+            </h2>
+            <p class="mb-6">
+              {connectionState.error}
             </p>
             <button
-              class="btn btn-primary"
-              onclick={() => kimaiStore.connect(currentProfile.auth)}
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
+              onclick={() => (showSettings = true)}
             >
-              Retry Connection
+              <Settings size={16} />
+              Check Settings
             </button>
           </div>
         </div>
       {:else}
         <!-- Main Interface -->
-        <div class="main-interface">
+        <div class="flex-1 flex flex-col overflow-hidden">
           <!-- Timer Section -->
-          <div class="timer-section">
-            <div class="timer-header">
-              <h2>Time Tracking</h2>
+          <div class="flex-1 flex flex-col overflow-hidden">
+            <div
+              class="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+            >
+              <h2 class="text-lg font-semibold">Time Tracking</h2>
               <button
-                class="tab-btn {currentTab === 'timer' ? 'active' : ''}"
+                class="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm {currentTab ===
+                'timer'
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : ''}"
                 onclick={() => (currentTab = "timer")}
               >
                 <Clock size={16} />
                 Timer
               </button>
               <button
-                class="tab-btn {currentTab === 'tasks' ? 'active' : ''}"
+                class="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm {currentTab ===
+                'tasks'
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : ''}"
                 onclick={toggleTasks}
               >
                 <ListTodo size={16} />
@@ -172,22 +197,24 @@
             </div>
 
             {#if currentTab === "timer"}
-              <div class="timer-content">
+              <div class="flex-1 flex flex-col gap-6 p-6 overflow-y-auto">
                 <!-- Timer Display -->
-                <div class="timer-display-section">
+                <div
+                  class="flex flex-col items-center gap-4 p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                >
                   <TimerDisplay size="large" />
-                  <div class="timer-controls">
+                  <div class="flex items-center gap-4">
                     <PlayButton size="large" showReset={true} />
                   </div>
                 </div>
 
                 <!-- Activity Widget -->
-                <div class="activity-section">
+                <div class="flex-1 min-h-0">
                   <ActivityWidget />
                 </div>
               </div>
             {:else}
-              <div class="tasks-content">
+              <div class="flex-1 overflow-hidden">
                 <TaskWidget />
               </div>
             {/if}
@@ -205,330 +232,3 @@
     />
   {/if}
 {/if}
-
-<style>
-  /* Global Styles */
-  :root {
-    --app-bg: var(--bg-primary);
-    --header-bg: var(--bg-secondary);
-    --border-color: var(--border-color);
-    --text-primary: var(--text-primary);
-    --text-secondary: var(--text-secondary);
-    --primary-color: var(--primary-color);
-    --success-color: var(--success-color);
-    --warning-color: var(--warning-color);
-    --danger-color: var(--danger-color);
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  /* Loading Screen */
-  .loading-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    gap: 1rem;
-  }
-
-  .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border-color);
-    border-top: 3px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
-  /* App Container */
-  .app-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: visible;
-  }
-
-  /* Header */
-  .app-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--header-bg);
-    border-bottom: 1px solid var(--border-color);
-    min-height: 64px;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .app-title {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .header-center {
-    display: flex;
-    align-items: center;
-  }
-
-  .connection-status {
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  .status-connected {
-    color: var(--success-color);
-  }
-
-  .status-connecting {
-    color: var(--warning-color);
-  }
-
-  .status-disconnected {
-    color: var(--danger-color);
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .header-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .header-btn:hover {
-    background: var(--bg-hover);
-    border-color: var(--primary-color);
-  }
-
-  /* Main Content */
-  .app-main {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Setup Screen */
-  .setup-screen {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 2rem;
-  }
-
-  .setup-content {
-    text-align: center;
-    max-width: 400px;
-    color: var(--text-secondary);
-  }
-
-  .setup-content h2 {
-    margin: 1rem 0 0.5rem 0;
-    color: var(--text-primary);
-  }
-
-  .setup-content p {
-    margin: 0 0 1.5rem 0;
-    line-height: 1.5;
-  }
-
-  /* Error Screen */
-  .error-screen {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 2rem;
-  }
-
-  .error-content {
-    text-align: center;
-    max-width: 400px;
-    color: var(--text-secondary);
-  }
-
-  .error-content h2 {
-    margin: 0 0 0.5rem 0;
-    color: var(--danger-color);
-  }
-
-  .error-content p {
-    margin: 0 0 1.5rem 0;
-    line-height: 1.5;
-  }
-
-  /* Main Interface */
-  .main-interface {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  /* Timer Section */
-  .timer-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .timer-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--header-bg);
-  }
-
-  .timer-header h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-
-  .tab-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--bg-primary);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.875rem;
-  }
-
-  .tab-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-  }
-
-  .tab-btn.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-  }
-
-  /* Timer Content */
-  .timer-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    padding: 1.5rem;
-    overflow-y: auto;
-  }
-
-  .timer-display-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    padding: 2rem;
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-  }
-
-  .timer-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .activity-section {
-    flex: 1;
-    min-height: 0;
-  }
-
-  /* Tasks Content */
-  .tasks-content {
-    flex: 1;
-    overflow: hidden;
-  }
-
-  /* Buttons */
-  .btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s;
-  }
-
-  .btn:hover {
-    background: var(--bg-hover);
-  }
-
-  .btn-primary {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-  }
-
-  .btn-primary:hover {
-    background: var(--primary-hover);
-  }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .app-header {
-      padding: 0.75rem 1rem;
-    }
-
-    .timer-content {
-      padding: 1rem;
-    }
-
-    .timer-display-section {
-      padding: 1.5rem;
-    }
-
-    .header-right {
-      gap: 0.5rem;
-    }
-  }
-</style>
