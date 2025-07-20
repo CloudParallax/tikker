@@ -233,14 +233,19 @@ export class KimaiApiClient {
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
                 if (value !== undefined) {
-                    queryParams.append(key, value.toString());
+                    if (key === 'user') {
+                        // Use users[] format for user filtering
+                        queryParams.append('users[]', value.toString());
+                    } else {
+                        queryParams.append(key, value.toString());
+                    }
                 }
             });
         }
 
         const queryString = queryParams.toString();
         const url = `/api/tasks${queryString ? `?${queryString}` : ''}`;
-        return this.request<KimaiPaginationResponse<KimaiTask>>(url);
+        return this.request<KimaiTask[]>(url);
     }
 
     async getTask(id: number): Promise<KimaiTask> {

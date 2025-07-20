@@ -60,7 +60,10 @@
                 task.description
                     ?.toLowerCase()
                     .includes(searchTerm.toLowerCase()) ||
-                task.customer?.name
+                (typeof task.project.customer === "object"
+                    ? task.project.customer.name
+                    : ""
+                )
                     ?.toLowerCase()
                     .includes(searchTerm.toLowerCase()) ||
                 task.project?.name
@@ -138,7 +141,10 @@
                 description: updatedTask.description,
                 status: updatedTask.status,
                 priority: updatedTask.priority,
-                customer: updatedTask.customer.id,
+                customer:
+                    typeof updatedTask.project.customer === "object"
+                        ? updatedTask.project.customer.id
+                        : updatedTask.project.customer,
                 project: updatedTask.project.id,
                 activity: updatedTask.activity.id,
                 actualDuration: updatedTask.actualDuration || 0,
@@ -411,7 +417,9 @@
                     <div class="task-meta">
                         <div class="task-customer">
                             <Building size={12} />
-                            {task.project.customer.name}
+                            {typeof task.project.customer === "object"
+                                ? task.project.customer.name
+                                : `Customer ${task.project.customer}`}
                         </div>
                         <div class="task-project">
                             <FolderOpen size={12} />

@@ -385,7 +385,14 @@ export const kimaiStore = {
 
         try {
             isLoading.tasks = true;
-            const response = await apiClient.getTasks(params);
+
+            // Always filter by current user if no specific user is provided
+            const taskParams = {
+                ...params,
+                user: params?.user || currentUser?.id
+            };
+
+            const response = await apiClient.getTasks(taskParams);
             cache.tasks = response;
             cache.lastUpdated.tasks = new Date().toISOString();
             return response;

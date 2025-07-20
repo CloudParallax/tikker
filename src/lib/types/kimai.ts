@@ -46,7 +46,7 @@ export interface KimaiProject {
     visible: boolean;
     budget?: number;
     timeBudget?: number;
-    customer: number;
+    customer: number | KimaiCustomer;
     customerName?: string;
     metaFields?: Record<string, any>;
 }
@@ -98,7 +98,6 @@ export interface KimaiTask {
     user: KimaiUser;
     activity: KimaiActivity;
     project: KimaiProject;
-    customer: KimaiCustomer;
     tags?: string[];
     metaFields?: Record<string, any>;
 }
