@@ -10,8 +10,8 @@ import type {
 } from '$lib/types/session.js';
 import type { KimaiUser, KimaiAuthConfig } from '$lib/types/kimai.js';
 import { DEFAULT_SESSION } from '$lib/types/session.js';
-import settingsStore from './settings.js';
-import kimaiStore from './kimai.js';
+import settingsStore from './settings.svelte.js';
+import kimaiStore from './kimai.svelte.js';
 
 // Session state
 let sessionState = $state<SessionState>({

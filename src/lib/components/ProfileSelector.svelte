@@ -487,10 +487,6 @@
         gap: 0.25rem;
     }
 
-    .active-indicator {
-        color: var(--primary-color);
-    }
-
     .empty-state {
         padding: 2rem 1rem;
         text-align: center;

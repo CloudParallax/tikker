@@ -229,7 +229,7 @@
                 <select
                     id="customer-select"
                     value={selectedCustomer?.id || ""}
-                    on:change={handleCustomerChange}
+                    onchange={handleCustomerChange}
                     disabled={isRunning || kimaiStore.isLoading.customers}
                 >
                     <option value="">Select Customer</option>
@@ -251,7 +251,7 @@
                 <select
                     id="project-select"
                     value={selectedProject?.id || ""}
-                    on:change={handleProjectChange}
+                    onchange={handleProjectChange}
                     disabled={isRunning ||
                         !selectedCustomer ||
                         kimaiStore.isLoading.projects}
@@ -275,7 +275,7 @@
                 <select
                     id="activity-select"
                     value={selectedActivity?.id || ""}
-                    on:change={handleActivityChange}
+                    onchange={handleActivityChange}
                     disabled={isRunning ||
                         !selectedProject ||
                         kimaiStore.isLoading.activities}

@@ -1,5 +1,5 @@
 // Store exports
-export { default as kimaiStore } from './kimai.js';
-export { default as sessionStore } from './session.js';
-export { default as settingsStore } from './settings.js';
-export { default as timerStore } from './timer.js'; 
+export { default as kimaiStore } from './kimai.svelte.js';
+export { default as sessionStore } from './session.svelte.js';
+export { default as settingsStore } from './settings.svelte.js';
+export { default as timerStore } from './timer.svelte.js'; 

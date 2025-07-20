@@ -132,7 +132,7 @@
 
 {#if isOpen}
     <!-- Backdrop -->
-    <div class="dialog-backdrop" on:click={handleCancel} />
+    <div class="dialog-backdrop" onclick={handleCancel} />
 
     <!-- Dialog -->
     <div
@@ -148,7 +148,7 @@
             </h2>
             <button
                 class="close-button"
-                on:click={handleCancel}
+                onclick={handleCancel}
                 aria-label="Close"
             >
                 <X size={20} />
@@ -239,7 +239,7 @@
                                 id="orderDate"
                                 type="date"
                                 value={formatDate(formData.orderDate || "")}
-                                on:change={(e) =>
+                                onchange={(e) =>
                                     (formData.orderDate = e.target.value)}
                                 disabled={isLoading}
                             />
@@ -258,7 +258,7 @@
                                 id="start"
                                 type="date"
                                 value={formatDate(formData.start || "")}
-                                on:change={(e) =>
+                                onchange={(e) =>
                                     (formData.start = e.target.value)}
                                 disabled={isLoading}
                             />
@@ -270,7 +270,7 @@
                                 id="end"
                                 type="date"
                                 value={formatDate(formData.end || "")}
-                                on:change={(e) =>
+                                onchange={(e) =>
                                     (formData.end = e.target.value)}
                                 disabled={isLoading}
                             />
@@ -346,7 +346,7 @@
             <button
                 type="button"
                 class="btn btn-secondary"
-                on:click={handleCancel}
+                onclick={handleCancel}
                 disabled={isLoading}
             >
                 Cancel
@@ -354,7 +354,7 @@
             <button
                 type="submit"
                 class="btn btn-primary"
-                on:click={handleSave}
+                onclick={handleSave}
                 disabled={isLoading}
             >
                 <Save size={16} />

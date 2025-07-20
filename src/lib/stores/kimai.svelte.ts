@@ -15,7 +15,7 @@ import type {
     KimaiCache
 } from '$lib/types/kimai.js';
 import { KimaiApiClient, createKimaiClient, validateAuthConfig } from '$lib/utils/kimai-api.js';
-import settingsStore from './settings.js';
+import settingsStore from './settings.svelte.js';
 
 // Kimai state
 let connectionState = $state<KimaiConnectionState>({

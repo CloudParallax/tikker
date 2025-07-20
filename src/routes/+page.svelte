@@ -225,15 +225,6 @@ Test
     box-sizing: border-box;
   }
 
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      sans-serif;
-    background: var(--app-bg);
-    color: var(--text-primary);
-  }
-
   /* Loading Screen */
   .loading-screen {
     display: flex;

@@ -595,13 +595,6 @@
         align-items: center;
     }
 
-    .input-with-icon svg {
-        position: absolute;
-        left: 0.75rem;
-        color: #6b7280;
-        z-index: 1;
-    }
-
     .input-with-icon input {
         padding-left: 2.5rem;
     }
