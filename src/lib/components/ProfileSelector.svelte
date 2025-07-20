@@ -26,13 +26,14 @@
             baseUrl: "",
         },
         autoConnect: true,
-    });
+    } as Omit<KimaiProfile, "id">);
 
     // Get current profile and all profiles
     let currentProfile = $derived(settingsStore.currentProfile);
     let profiles = $derived(settingsStore.profiles);
 
-    function toggleDropdown() {
+    function toggleDropdown(event: MouseEvent) {
+        event.stopPropagation();
         showDropdown = !showDropdown;
     }
 
@@ -76,21 +77,56 @@
     }
 
     function saveProfile() {
-        if (!profileForm.name.trim() || !profileForm.auth.baseUrl.trim()) {
+        console.log("saveProfile function called");
+        console.log("Saving profile:", profileForm);
+
+        // Validate required fields
+        if (!profileForm.name.trim()) {
+            console.log("Profile name validation failed");
+            alert("Profile name is required");
             return;
         }
 
-        if (editingProfile) {
-            settingsStore.updateProfile(editingProfile.id, profileForm);
-            dispatch("edit", { ...editingProfile, ...profileForm });
-        } else {
-            const newProfile = settingsStore.addProfile(profileForm);
-            dispatch("select", newProfile);
+        if (!profileForm.auth.baseUrl.trim()) {
+            console.log("Server URL validation failed");
+            alert("Server URL is required");
+            return;
         }
 
-        showAddForm = false;
-        showEditForm = false;
-        editingProfile = null;
+        if (!profileForm.auth.username?.trim()) {
+            console.log("Username validation failed");
+            alert("Username is required");
+            return;
+        }
+
+        if (!profileForm.auth.apiToken?.trim()) {
+            console.log("API Token validation failed");
+            alert("API Token is required");
+            return;
+        }
+
+        console.log("All validations passed, attempting to save...");
+
+        try {
+            if (editingProfile) {
+                console.log("Updating existing profile");
+                settingsStore.updateProfile(editingProfile.id, profileForm);
+                dispatch("edit", { ...editingProfile, ...profileForm });
+            } else {
+                console.log("Adding new profile");
+                const newProfile = settingsStore.addProfile(profileForm);
+                console.log("New profile created:", newProfile);
+                dispatch("select", newProfile);
+            }
+
+            console.log("Profile saved successfully, closing modal");
+            showAddForm = false;
+            showEditForm = false;
+            editingProfile = null;
+        } catch (error) {
+            console.error("Failed to save profile:", error);
+            alert("Failed to save profile. Please try again.");
+        }
     }
 
     function cancelForm() {
@@ -124,6 +160,14 @@
         </div>
         <User size={16} />
     </button>
+
+    <!-- Quick Add Profile Button (when no profile selected) -->
+    {#if !currentProfile}
+        <button class="quick-add-btn" onclick={addProfile}>
+            <Plus size={16} />
+            Add Profile
+        </button>
+    {/if}
 
     <!-- Dropdown Menu -->
     {#if showDropdown}
@@ -272,8 +316,13 @@
                     <button class="btn btn-secondary" onclick={cancelForm}
                         >Cancel</button
                     >
-                    <button class="btn btn-primary" onclick={saveProfile}
-                        >Add Profile</button
+                    <button
+                        class="btn btn-primary"
+                        onclick={() => {
+                            console.log("Add Profile button clicked");
+                            saveProfile();
+                        }}
+                        type="button">Add Profile</button
                     >
                 </div>
             </div>
@@ -405,6 +454,27 @@
     .profile-url {
         font-size: 0.75rem;
         color: var(--text-secondary);
+    }
+
+    .quick-add-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        margin-left: 0.5rem;
+        background: var(--primary-color);
+        color: white;
+        border: 1px solid var(--primary-color);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .quick-add-btn:hover {
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
     }
 
     .dropdown-menu {

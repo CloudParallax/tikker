@@ -34,7 +34,6 @@
     let selectedActivity: KimaiActivity | null = null;
     let description = "";
     let billable = true;
-    let tags: string[] = [];
 
     // Loading states
     let isLoading = false;
@@ -89,7 +88,6 @@
                 project: selectedProject!.id,
                 activity: selectedActivity!.id,
                 billable,
-                tags,
             };
 
             // Create time sheet on server
@@ -104,7 +102,6 @@
 
             // Clear form
             description = "";
-            tags = [];
         } catch (err) {
             error =
                 err instanceof Error

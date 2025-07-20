@@ -40,13 +40,15 @@ export interface CurrentTimeSheet {
 export interface CurrentTask {
     id: number;
     title: string;
-    status: 'open' | 'closed';
+    description?: string;
+    status: 'open' | 'closed' | 'pending' | 'progress';
     priority: 'low' | 'medium' | 'high' | 'urgent';
     customer: number;
     project: number;
     activity: number;
     estimatedDuration?: number;
     actualDuration: number;
+    begin: string;
 }
 
 export interface SessionState {

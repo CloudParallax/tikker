@@ -386,9 +386,9 @@ export const kimaiStore = {
         try {
             isLoading.tasks = true;
             const response = await apiClient.getTasks(params);
-            cache.tasks = response.data;
+            cache.tasks = response;
             cache.lastUpdated.tasks = new Date().toISOString();
-            return response.data;
+            return response;
         } catch (err) {
             error = err instanceof Error ? err.message : 'Failed to load tasks';
             throw err;
@@ -433,6 +433,97 @@ export const kimaiStore = {
             cache.tasks = cache.tasks.filter(task => task.id !== id);
         } catch (err) {
             error = err instanceof Error ? err.message : 'Failed to delete task';
+            throw err;
+        }
+    },
+
+    // Task Time Tracking
+    async startTask(id: number): Promise<KimaiTask> {
+        if (!apiClient) throw new Error('Not connected to Kimai');
+
+        try {
+            const updatedTask = await apiClient.startTask(id);
+            cache.tasks = cache.tasks.map(task =>
+                task.id === id ? updatedTask : task
+            );
+            return updatedTask;
+        } catch (err) {
+            error = err instanceof Error ? err.message : 'Failed to start task';
+            throw err;
+        }
+    },
+
+    async stopTask(id: number): Promise<KimaiTask> {
+        if (!apiClient) throw new Error('Not connected to Kimai');
+
+        try {
+            const updatedTask = await apiClient.stopTask(id);
+            cache.tasks = cache.tasks.map(task =>
+                task.id === id ? updatedTask : task
+            );
+            return updatedTask;
+        } catch (err) {
+            error = err instanceof Error ? err.message : 'Failed to stop task';
+            throw err;
+        }
+    },
+
+    async closeTask(id: number): Promise<KimaiTask> {
+        if (!apiClient) throw new Error('Not connected to Kimai');
+
+        try {
+            const updatedTask = await apiClient.closeTask(id);
+            cache.tasks = cache.tasks.map(task =>
+                task.id === id ? updatedTask : task
+            );
+            return updatedTask;
+        } catch (err) {
+            error = err instanceof Error ? err.message : 'Failed to close task';
+            throw err;
+        }
+    },
+
+    async reopenTask(id: number): Promise<KimaiTask> {
+        if (!apiClient) throw new Error('Not connected to Kimai');
+
+        try {
+            const updatedTask = await apiClient.reopenTask(id);
+            cache.tasks = cache.tasks.map(task =>
+                task.id === id ? updatedTask : task
+            );
+            return updatedTask;
+        } catch (err) {
+            error = err instanceof Error ? err.message : 'Failed to reopen task';
+            throw err;
+        }
+    },
+
+    async assignTask(id: number): Promise<KimaiTask> {
+        if (!apiClient) throw new Error('Not connected to Kimai');
+
+        try {
+            const updatedTask = await apiClient.assignTask(id);
+            cache.tasks = cache.tasks.map(task =>
+                task.id === id ? updatedTask : task
+            );
+            return updatedTask;
+        } catch (err) {
+            error = err instanceof Error ? err.message : 'Failed to assign task';
+            throw err;
+        }
+    },
+
+    async unassignTask(id: number): Promise<KimaiTask> {
+        if (!apiClient) throw new Error('Not connected to Kimai');
+
+        try {
+            const updatedTask = await apiClient.unassignTask(id);
+            cache.tasks = cache.tasks.map(task =>
+                task.id === id ? updatedTask : task
+            );
+            return updatedTask;
+        } catch (err) {
+            error = err instanceof Error ? err.message : 'Failed to unassign task';
             throw err;
         }
     },

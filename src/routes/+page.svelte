@@ -74,7 +74,6 @@
 <svelte:head>
   <title>Tikker - Time Tracking</title>
 </svelte:head>
-Test
 {#if isLoading}
   <div class="loading-screen">
     <div class="loading-spinner"></div>
@@ -258,7 +257,7 @@ Test
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow: hidden;
+    overflow: visible;
   }
 
   /* Header */

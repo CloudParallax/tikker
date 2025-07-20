@@ -90,19 +90,16 @@ export interface KimaiTask {
     id: number;
     title: string;
     description?: string;
-    status: 'open' | 'closed';
+    status: 'open' | 'closed' | 'pending' | 'progress';
     priority: 'low' | 'medium' | 'high' | 'urgent';
     dueDate?: string;
     estimatedDuration?: number;
     actualDuration?: number;
-    user: number;
-    userName?: string;
-    activity: number;
-    activityName?: string;
-    project: number;
-    projectName?: string;
-    customer: number;
-    customerName?: string;
+    user: KimaiUser;
+    activity: KimaiActivity;
+    project: KimaiProject;
+    customer: KimaiCustomer;
+    tags?: string[];
     metaFields?: Record<string, any>;
 }
 
@@ -194,7 +191,6 @@ export interface KimaiConnectionState {
     lastConnected?: string;
     error?: string;
     version?: KimaiVersion;
-    config?: KimaiConfig;
 }
 
 // Profile Management

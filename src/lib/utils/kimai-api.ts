@@ -37,7 +37,6 @@ export class KimaiApiClient {
         try {
             // Check version and compatibility
             const version = await this.getVersion();
-            const config = await this.getConfig();
 
             // Test authentication
             const user = await this.getCurrentUser();
@@ -46,8 +45,7 @@ export class KimaiApiClient {
                 isConnected: true,
                 isConnecting: false,
                 lastConnected: new Date().toISOString(),
-                version,
-                config
+                version
             };
 
             return this.connectionState;
@@ -70,13 +68,17 @@ export class KimaiApiClient {
         return this.request<KimaiVersion>('/api/version');
     }
 
-    async getConfig(): Promise<KimaiConfig> {
-        return this.request<KimaiConfig>('/api/config');
+    async getTimesheetConfig(): Promise<any> {
+        return this.request<any>('/api/config/timesheet');
+    }
+
+    async getColorsConfig(): Promise<any> {
+        return this.request<any>('/api/config/colors');
     }
 
     // Authentication
     async getCurrentUser(): Promise<KimaiUser> {
-        return this.request<KimaiUser>('/api/user/me');
+        return this.request<KimaiUser>('/api/users/me');
     }
 
     // Customer Management
@@ -226,7 +228,7 @@ export class KimaiApiClient {
         status?: 'open' | 'closed';
         page?: number;
         size?: number;
-    }): Promise<KimaiPaginationResponse<KimaiTask>> {
+    }): Promise<KimaiTask[]> {
         const queryParams = new URLSearchParams();
         if (params) {
             Object.entries(params).forEach(([key, value]) => {
@@ -265,6 +267,43 @@ export class KimaiApiClient {
         });
     }
 
+    // Task Time Tracking
+    async startTask(id: number): Promise<KimaiTask> {
+        return this.request<KimaiTask>(`/api/tasks/${id}/start`, {
+            method: 'PATCH'
+        });
+    }
+
+    async stopTask(id: number): Promise<KimaiTask> {
+        return this.request<KimaiTask>(`/api/tasks/${id}/stop`, {
+            method: 'PATCH'
+        });
+    }
+
+    async closeTask(id: number): Promise<KimaiTask> {
+        return this.request<KimaiTask>(`/api/tasks/${id}/close`, {
+            method: 'PATCH'
+        });
+    }
+
+    async reopenTask(id: number): Promise<KimaiTask> {
+        return this.request<KimaiTask>(`/api/tasks/${id}/reopen`, {
+            method: 'PATCH'
+        });
+    }
+
+    async assignTask(id: number): Promise<KimaiTask> {
+        return this.request<KimaiTask>(`/api/tasks/${id}/assign`, {
+            method: 'PATCH'
+        });
+    }
+
+    async unassignTask(id: number): Promise<KimaiTask> {
+        return this.request<KimaiTask>(`/api/tasks/${id}/unassign`, {
+            method: 'PATCH'
+        });
+    }
+
     // Core HTTP Request Method
     private async request<T>(
         endpoint: string,
@@ -289,7 +328,7 @@ export class KimaiApiClient {
 
         // Add authentication
         if (this.authConfig.type === 'api_token' && this.authConfig.apiToken) {
-            headers['X-AUTH-TOKEN'] = this.authConfig.apiToken;
+            headers['Authorization'] = `Bearer ${this.authConfig.apiToken}`;
         } else if (this.authConfig.type === 'legacy' && this.authConfig.username && this.authConfig.password) {
             const credentials = btoa(`${this.authConfig.username}:${this.authConfig.password}`);
             headers['Authorization'] = `Basic ${credentials}`;

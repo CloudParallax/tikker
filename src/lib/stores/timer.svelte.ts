@@ -130,7 +130,6 @@ export const timerStore = {
                 duration: Math.round(finalDuration),
                 description: timerState.currentEntry.description,
                 billable: timerState.currentEntry.billable,
-                tags: timerState.currentEntry.tags,
                 activity: timerState.currentEntry.activity,
                 project: timerState.currentEntry.project,
                 customer: timerState.currentEntry.customer
