@@ -372,12 +372,16 @@ export const kimaiStore = {
         return cache.tasks;
     },
 
+    get activeTasks() {
+        return cache.tasks.filter(task => task.status === 'progress');
+    },
+
     async loadTasks(params?: {
         user?: number;
         customer?: number;
         project?: number;
         activity?: number;
-        status?: 'open' | 'closed';
+        status?: 'open' | 'closed' | 'pending' | 'progress' | ('open' | 'closed' | 'pending' | 'progress')[];
         page?: number;
         size?: number;
     }): Promise<KimaiTask[]> {
@@ -392,16 +396,33 @@ export const kimaiStore = {
                 user: params?.user || currentUser?.id
             };
 
-            const response = await apiClient.getTasks(taskParams);
-            cache.tasks = response;
-            cache.lastUpdated.tasks = new Date().toISOString();
-            return response;
+            // If no status is specified, explicitly request tasks with 'pending' and 'progress' status
+            // to ensure active tasks are included in the response
+            if (!taskParams.status) {
+                // Explicitly request tasks with both pending and progress status
+                const response = await apiClient.getTasks({
+                    ...taskParams,
+                    status: ['pending', 'progress']
+                });
+                cache.tasks = response;
+                cache.lastUpdated.tasks = new Date().toISOString();
+                return response;
+            } else {
+                const response = await apiClient.getTasks(taskParams);
+                cache.tasks = response;
+                cache.lastUpdated.tasks = new Date().toISOString();
+                return response;
+            }
         } catch (err) {
             error = err instanceof Error ? err.message : 'Failed to load tasks';
             throw err;
         } finally {
             isLoading.tasks = false;
         }
+    },
+
+    async loadActiveTasks(): Promise<KimaiTask[]> {
+        return this.loadTasks({ status: 'progress' });
     },
 
     async createTask(task: Partial<KimaiTask>): Promise<KimaiTask> {

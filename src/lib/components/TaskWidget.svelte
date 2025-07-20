@@ -113,6 +113,7 @@
         try {
             isLoading = true;
             error = null;
+            // Load all tasks including those with 'progress' status
             tasks = await kimaiStore.loadTasks();
         } catch (err) {
             error = err instanceof Error ? err.message : "Failed to load tasks";
@@ -253,102 +254,94 @@
     function getPriorityColor(priority: string): string {
         switch (priority) {
             case "urgent":
-                return "var(--danger-color)";
+                return "text-red-600 dark:text-red-400";
             case "high":
-                return "var(--warning-color)";
+                return "text-orange-600 dark:text-orange-400";
             case "medium":
-                return "var(--primary-color)";
+                return "text-blue-600 dark:text-blue-400";
             case "low":
-                return "var(--success-color)";
+                return "text-green-600 dark:text-green-400";
             default:
-                return "var(--text-color)";
+                return "text-gray-600 dark:text-gray-400";
         }
     }
 
     function getStatusColor(status: string): string {
         switch (status) {
             case "open":
-                return "var(--success-color)";
+                return "text-green-600 dark:text-green-400";
+            case "progress":
+                return "text-blue-600 dark:text-blue-400";
             case "closed":
-                return "var(--text-muted)";
+                return "text-gray-500 dark:text-gray-400";
+            case "pending":
+                return "text-yellow-600 dark:text-yellow-400";
             default:
-                return "var(--text-color)";
+                return "text-gray-700 dark:text-gray-300";
         }
     }
 
     function formatDateTime(dateString: string): string {
         return format(new Date(dateString), "MMM dd, yyyy HH:mm");
     }
+
+    function isTaskActive(task: KimaiTask): boolean {
+        return task.status === "progress";
+    }
 </script>
 
-<div class="task-widget">
+<div class="flex flex-col gap-2 p-2 max-w-4xl mx-auto h-full min-h-0">
     <!-- Error Display -->
     {#if error}
-        <div class="error-message">
-            {error}
-            <button onclick={() => (error = null)} class="error-close">×</button
+        <div
+            class="flex justify-between items-center bg-red-600 text-white p-2 rounded-lg"
+        >
+            <span class="text-sm">{error}</span>
+            <button
+                onclick={() => (error = null)}
+                class="text-white text-lg hover:text-red-200 transition-colors"
             >
+                ×
+            </button>
         </div>
     {/if}
 
-    <!-- Connection Status -->
-    <div class="connection-status">
-        {#if kimaiStore.isConnecting}
-            <span class="status connecting">Connecting...</span>
-        {:else if kimaiStore.isConnected}
-            <span class="status connected">Connected</span>
-        {:else}
-            <span class="status disconnected">Disconnected</span>
-        {/if}
-    </div>
-
-    <!-- Debug Info (remove in production) -->
-    <div
-        class="debug-info"
-        style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;"
-    >
-        <div>
-            Selected Task: {selectedTask
-                ? `${selectedTask.title} (${selectedTask.status})`
-                : "None"}
-        </div>
-        <div>Can Start: {canStart}</div>
-        <div>Is Running: {isRunning}</div>
-        <div>Tasks Loaded: {tasks.length}</div>
-    </div>
-
     <!-- Header -->
-    <div class="header">
-        <h2>Task Management</h2>
+    <div class="flex justify-between items-center mb-2">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 m-0">
+            Task Management
+        </h2>
         <button
-            class="btn btn-refresh"
+            class="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white border-none rounded-lg cursor-pointer hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             onclick={loadTasks}
             disabled={isLoading}
             title="Refresh Tasks"
         >
-            <RefreshCw size={16} class={isLoading ? "spinning" : ""} />
+            <RefreshCw size={14} class={isLoading ? "animate-spin" : ""} />
         </button>
     </div>
 
     <!-- Filters -->
-    <div class="filters">
-        <div class="search-group">
-            <Search size={16} />
+    <div class="flex gap-2 flex-wrap">
+        <div class="flex items-center gap-1 flex-1 min-w-40">
+            <Search size={14} class="text-gray-500 dark:text-gray-400" />
             <input
                 type="text"
                 placeholder="Search tasks..."
                 value={searchTerm}
                 oninput={handleSearchChange}
                 disabled={isLoading}
+                class="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             />
         </div>
 
-        <div class="filter-group">
-            <Filter size={16} />
+        <div class="flex items-center gap-1">
+            <Filter size={14} class="text-gray-500 dark:text-gray-400" />
             <select
                 value={statusFilter}
                 onchange={handleStatusFilterChange}
                 disabled={isLoading}
+                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
                 <option value="all">All Status</option>
                 <option value="open">Open</option>
@@ -361,6 +354,7 @@
                 value={priorityFilter}
                 onchange={handlePriorityFilterChange}
                 disabled={isLoading}
+                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
                 <option value="all">All Priorities</option>
                 <option value="urgent">Urgent</option>
@@ -372,11 +366,13 @@
     </div>
 
     <!-- Task List -->
-    <div class="task-list">
+    <div class="flex flex-col gap-1 flex-1 overflow-y-auto min-h-0">
         {#if isLoading}
-            <div class="loading">Loading tasks...</div>
+            <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+                Loading tasks...
+            </div>
         {:else if filteredTasks.length === 0}
-            <div class="empty-state">
+            <div class="text-center py-4 text-gray-500 dark:text-gray-400">
                 <p>No tasks found</p>
                 {#if searchTerm || statusFilter !== "all" || priorityFilter !== "all"}
                     <button
@@ -385,7 +381,7 @@
                             statusFilter = "all";
                             priorityFilter = "all";
                         }}
-                        class="btn btn-clear"
+                        class="mt-2 px-3 py-1 bg-blue-600 text-white border-none rounded-lg cursor-pointer hover:bg-blue-700 transition-colors text-sm"
                     >
                         Clear Filters
                     </button>
@@ -394,58 +390,82 @@
         {:else}
             {#each filteredTasks as task (task.id)}
                 <div
-                    class="task-item {selectedTask?.id === task.id
-                        ? 'selected'
-                        : ''} {task.status === 'closed' ? 'closed' : ''}"
+                    class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md {selectedTask?.id ===
+                    task.id
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : ''} {task.status === 'closed'
+                        ? 'opacity-60'
+                        : ''} {isTaskActive(task)
+                        ? 'border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-900/10'
+                        : ''}"
                     onclick={() => handleTaskSelect(task)}
                 >
-                    <div class="task-header">
-                        <div class="task-title">
+                    <div class="flex justify-between items-center mb-1">
+                        <div
+                            class="flex items-center gap-1 font-semibold text-gray-900 dark:text-gray-100 text-sm"
+                        >
+                            {#if isTaskActive(task)}
+                                <div
+                                    class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"
+                                ></div>
+                            {/if}
                             {#if task.priority}
                                 {@const PriorityIcon = getPriorityIcon(
                                     task.priority,
                                 )}
                                 <PriorityIcon
-                                    size={16}
-                                    style="color: {getPriorityColor(
-                                        task.priority,
-                                    )}"
+                                    size={14}
+                                    class={getPriorityColor(task.priority)}
                                 />
                             {/if}
                             <span>{task.title}</span>
                         </div>
                         <div
-                            class="task-status"
-                            style="color: {getStatusColor(task.status)}"
+                            class={getStatusColor(task.status) +
+                                " text-xs font-medium uppercase"}
                         >
                             {task.status}
                         </div>
                     </div>
 
                     {#if task.description}
-                        <div class="task-description">{task.description}</div>
+                        <div
+                            class="text-gray-600 dark:text-gray-400 mb-2 text-xs"
+                        >
+                            {task.description}
+                        </div>
                     {/if}
 
-                    <div class="task-meta">
-                        <div class="task-customer">
-                            <Building size={12} />
+                    <div
+                        class="flex gap-3 mb-1 text-xs text-gray-500 dark:text-gray-400"
+                    >
+                        <div class="flex items-center gap-1">
+                            <Building size={10} />
                             {typeof task.project.customer === "object"
                                 ? task.project.customer.name
                                 : `Customer ${task.project.customer}`}
                         </div>
-                        <div class="task-project">
-                            <FolderOpen size={12} />
+                        <div class="flex items-center gap-1">
+                            <FolderOpen size={10} />
                             {task.project.name}
                         </div>
-                        <div class="task-activity">
-                            <Activity size={12} />
+                        <div class="flex items-center gap-1">
+                            <Activity size={10} />
                             {task.activity.name}
                         </div>
+                        {#if task.user}
+                            <div class="flex items-center gap-1">
+                                <User size={10} />
+                                {task.user.username}
+                            </div>
+                        {/if}
                     </div>
 
                     {#if task.dueDate}
-                        <div class="task-due">
-                            <Clock size={12} />
+                        <div
+                            class="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400"
+                        >
+                            <Clock size={10} />
                             Due: {formatDateTime(task.dueDate)}
                         </div>
                     {/if}
@@ -455,434 +475,90 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="action-buttons">
+    <div class="flex gap-2 justify-center items-center min-h-12 flex-shrink-0">
         {#if isRunning}
             <button
-                class="btn btn-stop"
+                class="flex items-center gap-1 px-3 py-2 bg-red-600 text-white border-none rounded-lg cursor-pointer font-medium transition-colors hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 onclick={handleStop}
                 disabled={isStopping}
             >
-                <Square size={16} />
+                <Square size={14} />
                 {isStopping ? "Stopping..." : "Stop Task"}
             </button>
         {:else if selectedTask}
             <button
-                class="btn btn-start"
+                class="flex items-center gap-1 px-3 py-2 bg-green-600 text-white border-none rounded-lg cursor-pointer font-medium transition-colors hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 onclick={handleStart}
                 disabled={!canStart || isStarting}
             >
-                <Play size={16} />
+                <Play size={14} />
                 {isStarting ? "Starting..." : "Start Task"}
             </button>
 
             {#if selectedTask.status === "open" && !isRunning}
                 <button
-                    class="btn btn-close"
+                    class="flex items-center gap-1 px-3 py-2 bg-orange-600 text-white border-none rounded-lg cursor-pointer font-medium transition-colors hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                     onclick={handleClose}
                     disabled={isRunning}
                 >
-                    <CheckCircle size={16} />
+                    <CheckCircle size={14} />
                     Close Task
                 </button>
             {/if}
         {:else}
-            <div class="no-task-selected">
-                <p>Select a task from the list above to start working</p>
+            <div
+                class="text-center text-gray-500 dark:text-gray-400 italic text-sm"
+            >
+                <p class="m-0">
+                    Select a task from the list above to start working
+                </p>
             </div>
         {/if}
     </div>
 
     <!-- Current Task Display -->
     {#if isRunning && sessionStore.currentTask}
-        <div class="current-task">
-            <h3>Currently Working On</h3>
-            <div class="task-info">
-                <div class="task-item">
-                    <strong>Task:</strong>
-                    {sessionStore.currentTask.title}
+        <div
+            class="mt-2 p-3 border border-green-600 rounded-lg bg-green-50 dark:bg-green-900/20"
+        >
+            <h3
+                class="text-green-600 dark:text-green-400 m-0 mb-2 font-semibold text-sm"
+            >
+                Currently Working On
+            </h3>
+            <div class="flex flex-col gap-1 mb-3">
+                <div class="flex gap-2">
+                    <strong class="min-w-16 text-xs">Task:</strong>
+                    <span class="text-xs">{sessionStore.currentTask.title}</span
+                    >
                 </div>
                 {#if sessionStore.currentTask.description}
-                    <div class="task-item">
-                        <strong>Description:</strong>
-                        {sessionStore.currentTask.description}
+                    <div class="flex gap-2">
+                        <strong class="min-w-16 text-xs">Description:</strong>
+                        <span class="text-xs"
+                            >{sessionStore.currentTask.description}</span
+                        >
                     </div>
                 {/if}
-                <div class="task-item">
-                    <strong>Started:</strong>
-                    {formatDateTime(sessionStore.currentTask.begin)}
+                <div class="flex gap-2">
+                    <strong class="min-w-16 text-xs">Started:</strong>
+                    <span class="text-xs"
+                        >{formatDateTime(sessionStore.currentTask.begin)}</span
+                    >
                 </div>
             </div>
 
             <!-- Timer Display -->
-            <div class="timer-section">
-                <div class="timer-display">
+            <div
+                class="flex flex-col items-center gap-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600"
+            >
+                <div class="flex justify-center">
                     <TimerDisplay size="medium" />
                 </div>
-                <div class="timer-controls">
+                <div class="flex items-center gap-2">
                     <PlayButton size="medium" showReset={true} />
                 </div>
             </div>
         </div>
     {/if}
 </div>
-
-<style>
-    .task-widget {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .error-message {
-        background: var(--danger-color);
-        color: white;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .error-close {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1.2rem;
-        cursor: pointer;
-    }
-
-    .connection-status {
-        text-align: center;
-        font-size: 0.875rem;
-    }
-
-    .status {
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-weight: 500;
-    }
-
-    .status.connected {
-        background: var(--success-color);
-        color: white;
-    }
-
-    .status.connecting {
-        background: var(--warning-color);
-        color: white;
-    }
-
-    .status.disconnected {
-        background: var(--danger-color);
-        color: white;
-    }
-
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .header h2 {
-        margin: 0;
-        color: var(--text-color);
-    }
-
-    .btn-refresh {
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 0.5rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .btn-refresh:hover {
-        background: var(--primary-hover);
-    }
-
-    .btn-refresh:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .spinning {
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    .filters {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .search-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex: 1;
-        min-width: 200px;
-    }
-
-    .search-group input {
-        flex: 1;
-        padding: 0.5rem;
-        border: 1px solid var(--border-color);
-        border-radius: 0.5rem;
-        background: var(--bg-color);
-        color: var(--text-color);
-    }
-
-    .filter-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .filter-group select {
-        padding: 0.5rem;
-        border: 1px solid var(--border-color);
-        border-radius: 0.5rem;
-        background: var(--bg-color);
-        color: var(--text-color);
-    }
-
-    .task-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        max-height: 400px;
-        overflow-y: auto;
-    }
-
-    .task-item {
-        padding: 1rem;
-        border: 1px solid var(--border-color);
-        border-radius: 0.5rem;
-        background: var(--bg-color);
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .task-item:hover {
-        border-color: var(--primary-color);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .task-item.selected {
-        border-color: var(--primary-color);
-        background: var(--primary-bg);
-    }
-
-    .task-item.closed {
-        opacity: 0.6;
-    }
-
-    .task-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-
-    .task-title {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 600;
-        color: var(--text-color);
-    }
-
-    .task-status {
-        font-size: 0.875rem;
-        font-weight: 500;
-        text-transform: uppercase;
-    }
-
-    .task-description {
-        color: var(--text-muted);
-        margin-bottom: 0.75rem;
-        font-size: 0.875rem;
-    }
-
-    .task-meta {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 0.5rem;
-        font-size: 0.75rem;
-        color: var(--text-muted);
-    }
-
-    .task-meta > div {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .task-due {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-size: 0.75rem;
-        color: var(--warning-color);
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
-        align-items: center;
-        min-height: 60px;
-    }
-
-    .no-task-selected {
-        text-align: center;
-        color: var(--text-muted);
-        font-style: italic;
-    }
-
-    .no-task-selected p {
-        margin: 0;
-    }
-
-    .btn {
-        padding: 0.75rem 1rem;
-        border: none;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-    .btn-start {
-        background: var(--success-color);
-        color: white;
-    }
-
-    .btn-start:hover:not(:disabled) {
-        background: var(--success-hover);
-    }
-
-    .btn-stop {
-        background: var(--danger-color);
-        color: white;
-    }
-
-    .btn-stop:hover:not(:disabled) {
-        background: var(--danger-hover);
-    }
-
-    .btn-close {
-        background: var(--warning-color);
-        color: white;
-    }
-
-    .btn-close:hover:not(:disabled) {
-        background: var(--warning-hover);
-    }
-
-    .btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .current-task {
-        margin-top: 1rem;
-        padding: 1rem;
-        border: 1px solid var(--success-color);
-        border-radius: 0.5rem;
-        background: var(--success-bg);
-    }
-
-    .current-task h3 {
-        margin: 0 0 0.75rem 0;
-        color: var(--success-color);
-    }
-
-    .task-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .task-info .task-item {
-        display: flex;
-        gap: 0.5rem;
-        padding: 0;
-        border: none;
-        background: none;
-        cursor: default;
-    }
-
-    .task-info .task-item strong {
-        min-width: 80px;
-    }
-
-    .timer-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        padding: 1.5rem;
-        background: var(--bg-secondary);
-        border-radius: 0.5rem;
-        border: 1px solid var(--border-color);
-    }
-
-    .timer-display {
-        display: flex;
-        justify-content: center;
-    }
-
-    .timer-controls {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .loading {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-muted);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-muted);
-    }
-
-    .btn-clear {
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        margin-top: 0.5rem;
-    }
-
-    .btn-clear:hover {
-        background: var(--primary-hover);
-    }
-</style>

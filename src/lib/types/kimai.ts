@@ -100,6 +100,7 @@ export interface KimaiTask {
     project: KimaiProject;
     tags?: string[];
     metaFields?: Record<string, any>;
+    activeTimesheets?: KimaiTimeSheet[];
 }
 
 export interface KimaiVersion {

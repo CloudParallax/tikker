@@ -225,7 +225,7 @@ export class KimaiApiClient {
         customer?: number;
         project?: number;
         activity?: number;
-        status?: 'open' | 'closed';
+        status?: 'open' | 'closed' | 'pending' | 'progress' | ('open' | 'closed' | 'pending' | 'progress')[];
         page?: number;
         size?: number;
     }): Promise<KimaiTask[]> {
@@ -236,6 +236,13 @@ export class KimaiApiClient {
                     if (key === 'user') {
                         // Use users[] format for user filtering
                         queryParams.append('users[]', value.toString());
+                    } else if (key === 'status') {
+                        // Use status[] format for status filtering as per API docs
+                        if (Array.isArray(value)) {
+                            value.forEach(status => queryParams.append('status[]', status));
+                        } else {
+                            queryParams.append('status[]', value.toString());
+                        }
                     } else {
                         queryParams.append(key, value.toString());
                     }
