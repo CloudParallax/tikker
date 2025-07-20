@@ -66,7 +66,7 @@ export interface SessionState {
 
 // Session Events
 export interface SessionEvent {
-    type: 'login' | 'logout' | 'timeout' | 'error' | 'idle' | 'lock';
+    type: 'login' | 'logout' | 'timeout' | 'error' | 'idle' | 'lock' | 'start' | 'stop';
     timestamp: string;
     details?: any;
 }
