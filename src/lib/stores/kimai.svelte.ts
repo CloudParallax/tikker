@@ -327,6 +327,24 @@ export const kimaiStore = {
         }
     },
 
+    async loadActiveTimeSheets(): Promise<KimaiTimeSheet[]> {
+        if (!apiClient) throw new Error('Not connected to Kimai');
+
+        try {
+            isLoading.timeSheets = true;
+            const activeTimeSheets = await apiClient.getActiveTimeSheets();
+            // Update cache with active timesheets
+            cache.timeSheets = activeTimeSheets;
+            cache.lastUpdated.timeSheets = new Date().toISOString();
+            return activeTimeSheets;
+        } catch (err) {
+            error = err instanceof Error ? err.message : 'Failed to load active timesheets';
+            throw err;
+        } finally {
+            isLoading.timeSheets = false;
+        }
+    },
+
     async createTimeSheet(timeSheet: Partial<KimaiTimeSheet>): Promise<KimaiTimeSheet> {
         if (!apiClient) throw new Error('Not connected to Kimai');
 

@@ -195,6 +195,10 @@ export class KimaiApiClient {
         return this.request<KimaiPaginationResponse<KimaiTimeSheet>>(url);
     }
 
+    async getActiveTimeSheets(): Promise<KimaiTimeSheet[]> {
+        return this.request<KimaiTimeSheet[]>('/api/timesheets/active');
+    }
+
     async getTimeSheet(id: number): Promise<KimaiTimeSheet> {
         return this.request<KimaiTimeSheet>(`/api/timesheets/${id}`);
     }

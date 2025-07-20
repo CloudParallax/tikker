@@ -24,6 +24,7 @@
         KimaiCustomer,
         KimaiProject,
         KimaiActivity,
+        KimaiTimeSheet,
     } from "$lib/types/kimai.js";
     import type { CurrentTask } from "$lib/types/session.js";
     import {
@@ -45,6 +46,10 @@
     let priorityFilter = $state<"all" | "low" | "medium" | "high" | "urgent">(
         "all",
     );
+
+    // Active timesheet state
+    let activeTimeSheet = $state<KimaiTimeSheet | null>(null);
+    let isCheckingActiveTimeSheet = $state(false);
 
     // Loading states
     let isLoading = $state(false);
@@ -102,9 +107,11 @@
                             : "Failed to connect";
                 }
                 await loadTasks();
+                await checkActiveTimeSheet();
             })();
         } else if (kimaiStore.isConnected) {
             loadTasks();
+            checkActiveTimeSheet();
         }
     });
 
@@ -119,6 +126,48 @@
             error = err instanceof Error ? err.message : "Failed to load tasks";
         } finally {
             isLoading = false;
+        }
+    }
+
+    async function checkActiveTimeSheet() {
+        try {
+            isCheckingActiveTimeSheet = true;
+            error = null;
+            // Load active timesheets to check for running activities
+            const activeTimeSheets = await kimaiStore.loadActiveTimeSheets();
+            // Get the latest active timesheet (most recent start time)
+            if (activeTimeSheets.length > 0) {
+                activeTimeSheet = activeTimeSheets[0]; // API returns most recent first
+            } else {
+                activeTimeSheet = null;
+            }
+        } catch (err) {
+            error =
+                err instanceof Error
+                    ? err.message
+                    : "Failed to check active timesheet";
+        } finally {
+            isCheckingActiveTimeSheet = false;
+        }
+    }
+
+    async function stopActiveTimeSheet(timeSheetId: number) {
+        try {
+            isStopping = true;
+            error = null;
+
+            // Stop the active timesheet
+            await kimaiStore.updateTimeSheet(timeSheetId, {
+                end: new Date().toISOString(),
+            });
+
+            // Refresh active timesheet check
+            await checkActiveTimeSheet();
+        } catch (err) {
+            error =
+                err instanceof Error ? err.message : "Failed to stop timesheet";
+        } finally {
+            isStopping = false;
         }
     }
 
@@ -151,6 +200,17 @@
 
             sessionStore.startTask(currentTask);
 
+            // Start timer automatically when task starts
+            timerStore.start({
+                id: currentTask.id,
+                title: currentTask.title,
+                description: currentTask.description,
+                activity: currentTask.activity,
+                project: currentTask.project,
+                customer: currentTask.customer,
+                billable: true,
+            });
+
             // Update local task list
             tasks = tasks.map((task) =>
                 task.id === updatedTask.id ? updatedTask : task,
@@ -176,6 +236,9 @@
 
             // Stop local session
             sessionStore.stopTask();
+
+            // Stop timer automatically when task stops
+            timerStore.stop();
 
             // Update local task list
             tasks = tasks.map((task) =>
@@ -313,11 +376,19 @@
         </h2>
         <button
             class="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white border-none rounded-lg cursor-pointer hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            onclick={loadTasks}
-            disabled={isLoading}
-            title="Refresh Tasks"
+            onclick={async () => {
+                await loadTasks();
+                await checkActiveTimeSheet();
+            }}
+            disabled={isLoading || isCheckingActiveTimeSheet}
+            title="Refresh Tasks and Active Timesheets"
         >
-            <RefreshCw size={14} class={isLoading ? "animate-spin" : ""} />
+            <RefreshCw
+                size={14}
+                class={isLoading || isCheckingActiveTimeSheet
+                    ? "animate-spin"
+                    : ""}
+            />
         </button>
     </div>
 
@@ -558,6 +629,80 @@
                 <div class="flex items-center gap-2">
                     <PlayButton size="medium" showReset={true} />
                 </div>
+            </div>
+        </div>
+    {/if}
+
+    <!-- Active Timesheet Display -->
+    {#if activeTimeSheet && !isRunning}
+        <div
+            class="mt-2 p-3 border border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900/20"
+        >
+            <h3
+                class="text-blue-600 dark:text-blue-400 m-0 mb-2 font-semibold text-sm"
+            >
+                Active Timesheet Found
+            </h3>
+            <div class="flex flex-col gap-1 mb-3">
+                <div class="flex gap-2">
+                    <strong class="min-w-16 text-xs">Activity:</strong>
+                    <span class="text-xs"
+                        >{activeTimeSheet.activityName ||
+                            `Activity ${activeTimeSheet.activity}`}</span
+                    >
+                </div>
+                <div class="flex gap-2">
+                    <strong class="min-w-16 text-xs">Project:</strong>
+                    <span class="text-xs"
+                        >{activeTimeSheet.projectName ||
+                            `Project ${activeTimeSheet.project}`}</span
+                    >
+                </div>
+                {#if activeTimeSheet.description}
+                    <div class="flex gap-2">
+                        <strong class="min-w-16 text-xs">Description:</strong>
+                        <span class="text-xs"
+                            >{activeTimeSheet.description}</span
+                        >
+                    </div>
+                {/if}
+                <div class="flex gap-2">
+                    <strong class="min-w-16 text-xs">Started:</strong>
+                    <span class="text-xs"
+                        >{formatDateTime(activeTimeSheet.begin)}</span
+                    >
+                </div>
+                {#if activeTimeSheet.duration}
+                    <div class="flex gap-2">
+                        <strong class="min-w-16 text-xs">Duration:</strong>
+                        <span class="text-xs"
+                            >{Math.floor(activeTimeSheet.duration / 60)}m {activeTimeSheet.duration %
+                                60}s</span
+                        >
+                    </div>
+                {/if}
+            </div>
+
+            <div class="flex gap-2">
+                <button
+                    class="flex items-center gap-1 px-3 py-2 bg-red-600 text-white border-none rounded-lg cursor-pointer font-medium transition-colors hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    onclick={() => stopActiveTimeSheet(activeTimeSheet.id)}
+                    disabled={isStopping}
+                >
+                    <Square size={14} />
+                    {isStopping ? "Stopping..." : "Stop Timesheet"}
+                </button>
+                <button
+                    class="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white border-none rounded-lg cursor-pointer font-medium transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    onclick={checkActiveTimeSheet}
+                    disabled={isCheckingActiveTimeSheet}
+                >
+                    <RefreshCw
+                        size={14}
+                        class={isCheckingActiveTimeSheet ? "animate-spin" : ""}
+                    />
+                    Refresh
+                </button>
             </div>
         </div>
     {/if}
