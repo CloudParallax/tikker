@@ -13,20 +13,20 @@
     "windows": [
       {
         "title": "tikker",
-        "width": 800,
+        "width": 400,
         "height": 600,
         "label": "main",
-        "alwaysOnTop": true,
+        "alwaysOnTop": false,
         "closable": true,
         "decorations": true,
         "focus": true,
-        "hiddenTitle": true,
-        "maximizable": false,
-        "minimizable": false,
+        "hiddenTitle": false,
+        "maximizable": true,
+        "minimizable": true,
         "resizable": true,
-        "shadow": false,
-        "visible": false,
-        "transparent": true
+        "shadow": true,
+        "visible": true,
+        "transparent": false
       }
     ],
     "macOSPrivateApi": true,
@@ -44,5 +44,40 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "capabilities": {
+    "default": {
+      "allowlist": {
+        "all": false,
+        "globalShortcut": {
+          "all": true
+        },
+        "window": {
+          "all": true
+        },
+        "systemTray": {
+          "all": true
+        },
+        "app": {
+          "all": true
+        },
+        "fs": {
+          "all": true,
+          "scope": [
+            "$APPDATA",
+            "$APPCONFIG",
+            "$APPCACHE"
+          ]
+        },
+        "http": {
+          "all": true,
+          "request": true,
+          "scope": [
+            "https://*",
+            "http://*"
+          ]
+        }
+      }
+    }
   }
 }
