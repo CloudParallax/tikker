@@ -14,9 +14,22 @@
       {
         "title": "tikker",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "label": "main",
+        "alwaysOnTop": true,
+        "closable": true,
+        "decorations": true,
+        "focus": true,
+        "hiddenTitle": true,
+        "maximizable": false,
+        "minimizable": false,
+        "resizable": true,
+        "shadow": false,
+        "visible": false,
+        "transparent": true
       }
     ],
+    "macOSPrivateApi": true,
     "security": {
       "csp": null
     }
