@@ -54,7 +54,7 @@ export const timerStore = {
                 duration: 0
             } as TimerEntry : undefined,
             canStart: false,
-            canPause: true,
+            canPause: false,
             canStop: true,
             canResume: false
         };
@@ -66,56 +66,6 @@ export const timerStore = {
         return true;
     },
 
-    pause() {
-        if (!timerState.canPause) return false;
-
-        const now = new Date();
-        timerState = {
-            ...timerState,
-            isRunning: false,
-            isPaused: true,
-            status: 'paused',
-            pauseTime: now,
-            canStart: false,
-            canPause: false,
-            canStop: true,
-            canResume: true
-        };
-
-        stopTimerInterval();
-        stopNotificationInterval();
-        saveTimerState();
-        dispatchTimerEvent('pause', { duration: timerState.totalElapsedTime });
-        return true;
-    },
-
-    resume() {
-        if (!timerState.canResume) return false;
-
-        const now = new Date();
-        const pauseDuration = timerState.pauseTime ?
-            (now.getTime() - timerState.pauseTime.getTime()) / 1000 : 0;
-
-        timerState = {
-            ...timerState,
-            isRunning: true,
-            isPaused: false,
-            status: 'running',
-            pauseTime: null,
-            totalElapsedTime: timerState.totalElapsedTime + pauseDuration,
-            canStart: false,
-            canPause: true,
-            canStop: true,
-            canResume: false
-        };
-
-        startTimerInterval();
-        startNotificationInterval();
-        saveTimerState();
-        dispatchTimerEvent('resume', { duration: timerState.totalElapsedTime });
-        return true;
-    },
-
     stop() {
         if (!timerState.canStop) return false;
 
@@ -123,26 +73,26 @@ export const timerStore = {
         const finalDuration = timerState.totalElapsedTime;
 
         // Create time sheet entry if we have current entry
-        if (timerState.currentEntry) {
-            const timeSheet: Partial<KimaiTimeSheet> = {
-                begin: timerState.currentEntry.begin,
-                end: now.toISOString(),
-                duration: Math.round(finalDuration),
-                description: timerState.currentEntry.description,
-                billable: timerState.currentEntry.billable,
-                activity: timerState.currentEntry.activity,
-                project: timerState.currentEntry.project,
-                customer: timerState.currentEntry.customer
-            };
+        // if (timerState.currentEntry) {
+        //     const timeSheet: Partial<KimaiTimeSheet> = {
+        //         begin: timerState.currentEntry.begin,
+        //         end: now.toISOString(),
+        //         duration: Math.round(finalDuration),
+        //         description: timerState.currentEntry.description,
+        //         billable: timerState.currentEntry.billable,
+        //         activity: timerState.currentEntry.activity,
+        //         project: timerState.currentEntry.project,
+        //         customer: timerState.currentEntry.customer
+        //     };
 
-            // Save to Kimai
-            kimaiStore.createTimeSheet(timeSheet as KimaiTimeSheet).then(() => {
-                // Update history
-                updateTimerHistory();
-            }).catch(error => {
-                console.error('Failed to save time sheet:', error);
-            });
-        }
+        //     // Save to Kimai
+        //     kimaiStore.createTimeSheet(timeSheet as KimaiTimeSheet).then(() => {
+        //         // Update history
+        //         updateTimerHistory();
+        //     }).catch(error => {
+        //         console.error('Failed to save time sheet:', error);
+        //     });
+        // }
 
         timerState = {
             ...DEFAULT_TIMER_STATE,
@@ -169,12 +119,12 @@ export const timerStore = {
         if (!timerState.isRunning || !timerState.startTime) return;
 
         const now = new Date();
-        const elapsed = (now.getTime() - timerState.startTime.getTime()) / 1000;
+        const totalElapsed = (now.getTime() - timerState.startTime.getTime()) / 1000;
 
         timerState = {
             ...timerState,
-            elapsedTime: elapsed,
-            totalElapsedTime: timerState.totalElapsedTime + elapsed
+            elapsedTime: totalElapsed,
+            totalElapsedTime: totalElapsed
         };
 
         // Update current entry duration
@@ -237,7 +187,7 @@ function startTimerInterval() {
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         timerStore.updateElapsedTime();
-    }, 1000);
+    }, 100); // Update more frequently for smoother display
 }
 
 function stopTimerInterval() {
@@ -336,7 +286,7 @@ function loadTimerState(): TimerState {
         if (stored) {
             const parsed = JSON.parse(stored);
             // Reset running state on load to prevent issues
-            return {
+            const state = {
                 ...parsed,
                 isRunning: false,
                 isPaused: false,
@@ -344,8 +294,12 @@ function loadTimerState(): TimerState {
                 canStart: true,
                 canPause: false,
                 canStop: false,
-                canResume: false
+                canResume: false,
+                startTime: null,
+                pauseTime: null,
+                endTime: null
             };
+            return state;
         }
     } catch (error) {
         console.error('Failed to load timer state:', error);

@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { timerStore } from "$lib/stores/index.js";
-    import { Play, Pause, Square, RotateCcw } from "lucide-svelte";
+    import { timerStore, sessionStore } from "$lib/stores/index.js";
+    import { Play, Square, RotateCcw } from "lucide-svelte";
 
     // Props
     interface Props {
@@ -22,12 +22,19 @@
     function handleClick() {
         if (timerState.canStart) {
             timerStore.start();
-        } else if (timerState.canPause) {
-            timerStore.pause();
-        } else if (timerState.canResume) {
-            timerStore.resume();
         } else if (timerState.canStop) {
+            // Stop timer
             timerStore.stop();
+
+            // If there's a current task running, also stop it
+            if (sessionStore.currentTask) {
+                // Dispatch a custom event to notify TaskWidget to stop the task
+                window.dispatchEvent(
+                    new CustomEvent("stop-task-requested", {
+                        detail: { taskId: sessionStore.currentTask.id },
+                    }),
+                );
+            }
         }
     }
 
@@ -40,10 +47,6 @@
     function getButtonIcon() {
         if (timerState.canStart) {
             return Play;
-        } else if (timerState.canPause) {
-            return Pause;
-        } else if (timerState.canResume) {
-            return Play;
         } else if (timerState.canStop) {
             return Square;
         }
@@ -53,11 +56,9 @@
     // Get button color classes
     function getButtonColorClasses(): string {
         if (timerState.status === "running") {
-            return "text-green-600 dark:text-green-400";
-        } else if (timerState.status === "paused") {
-            return "text-yellow-600 dark:text-yellow-400";
-        } else if (timerState.status === "stopped") {
             return "text-red-600 dark:text-red-400";
+        } else if (timerState.status === "stopped") {
+            return "text-green-600 dark:text-green-400";
         }
         return "text-blue-600 dark:text-blue-400";
     }
@@ -66,10 +67,6 @@
     function getButtonTitle(): string {
         if (timerState.canStart) {
             return "Start Timer";
-        } else if (timerState.canPause) {
-            return "Pause Timer";
-        } else if (timerState.canResume) {
-            return "Resume Timer";
         } else if (timerState.canStop) {
             return "Stop Timer";
         }

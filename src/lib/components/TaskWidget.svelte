@@ -115,6 +115,30 @@
         }
     });
 
+    // Listen for stop task requests from timer display
+    $effect(() => {
+        const handleStopTaskRequest = (event: CustomEvent) => {
+            if (
+                event.detail?.taskId &&
+                sessionStore.currentTask?.id === event.detail.taskId
+            ) {
+                handleStop();
+            }
+        };
+
+        window.addEventListener(
+            "stop-task-requested",
+            handleStopTaskRequest as EventListener,
+        );
+
+        return () => {
+            window.removeEventListener(
+                "stop-task-requested",
+                handleStopTaskRequest as EventListener,
+            );
+        };
+    });
+
     // Event handlers
     async function loadTasks() {
         try {
@@ -178,23 +202,28 @@
             isStarting = true;
             error = null;
 
+            // Stop any active timesheet before starting a new task
+            if (activeTimeSheet) {
+                await stopActiveTimeSheet(activeTimeSheet.id);
+            }
+
             // Start task on server
-            const updatedTask = await kimaiStore.startTask(selectedTask.id);
+            await kimaiStore.startTask(selectedTask.id);
 
             // Start local session
             const currentTask: CurrentTask = {
-                id: updatedTask.id,
-                title: updatedTask.title,
-                description: updatedTask.description,
-                status: updatedTask.status,
-                priority: updatedTask.priority,
+                id: selectedTask.id,
+                title: selectedTask.title,
+                description: selectedTask.description,
+                status: selectedTask.status,
+                priority: selectedTask.priority,
                 customer:
-                    typeof updatedTask.project.customer === "object"
-                        ? updatedTask.project.customer.id
-                        : updatedTask.project.customer,
-                project: updatedTask.project.id,
-                activity: updatedTask.activity.id,
-                actualDuration: updatedTask.actualDuration || 0,
+                    typeof selectedTask.project.customer === "object"
+                        ? selectedTask.project.customer.id
+                        : selectedTask.project.customer,
+                project: selectedTask.project.id,
+                activity: selectedTask.activity.id,
+                actualDuration: selectedTask.actualDuration || 0,
                 begin: new Date().toISOString(),
             };
 
@@ -203,18 +232,12 @@
             // Start timer automatically when task starts
             timerStore.start({
                 id: currentTask.id,
-                title: currentTask.title,
                 description: currentTask.description,
                 activity: currentTask.activity,
                 project: currentTask.project,
                 customer: currentTask.customer,
                 billable: true,
             });
-
-            // Update local task list
-            tasks = tasks.map((task) =>
-                task.id === updatedTask.id ? updatedTask : task,
-            );
         } catch (err) {
             error = err instanceof Error ? err.message : "Failed to start task";
         } finally {
@@ -461,19 +484,28 @@
         {:else}
             {#each filteredTasks as task (task.id)}
                 <div
-                    class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 cursor-pointer transition-all duration-200 hover:border-blue-500 hover:shadow-md {selectedTask?.id ===
+                    class="p-2 border rounded-lg cursor-pointer transition-all duration-300 hover:border-blue-500 hover:shadow-md relative {selectedTask?.id ===
                     task.id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : ''} {task.status === 'closed'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'} {task.status ===
+                    'closed'
                         ? 'opacity-60'
                         : ''} {isTaskActive(task)
                         ? 'border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-900/10'
                         : ''}"
                     onclick={() => handleTaskSelect(task)}
                 >
+                    {#if selectedTask?.id === task.id}
+                        <div
+                            class="absolute top-0 right-0 w-0 h-0 border-l-[12px] border-l-transparent border-t-[12px] border-t-blue-500"
+                        ></div>
+                    {/if}
                     <div class="flex justify-between items-center mb-1">
                         <div
-                            class="flex items-center gap-1 font-semibold text-gray-900 dark:text-gray-100 text-sm"
+                            class="flex items-center gap-1 font-semibold text-sm {selectedTask?.id ===
+                            task.id
+                                ? 'text-blue-700 dark:text-blue-300'
+                                : 'text-gray-900 dark:text-gray-100'}"
                         >
                             {#if isTaskActive(task)}
                                 <div
@@ -598,6 +630,10 @@
                 Currently Working On
             </h3>
             <div class="flex flex-col gap-1 mb-3">
+                <div class="flex gap-2">
+                    <strong class="min-w-16 text-xs">ID:</strong>
+                    <span class="text-xs">{sessionStore.currentTask.id}</span>
+                </div>
                 <div class="flex gap-2">
                     <strong class="min-w-16 text-xs">Task:</strong>
                     <span class="text-xs">{sessionStore.currentTask.title}</span
