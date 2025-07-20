@@ -134,7 +134,7 @@
 
 {#if isOpen}
     <!-- Backdrop -->
-    <div class="dialog-backdrop" on:click={handleCancel} />
+    <div class="dialog-backdrop" onclick={handleCancel} />
 
     <!-- Dialog -->
     <div
@@ -150,7 +150,7 @@
             </h2>
             <button
                 class="close-button"
-                on:click={handleCancel}
+                onclick={handleCancel}
                 aria-label="Close"
             >
                 <X size={20} />
@@ -396,7 +396,7 @@
             <button
                 type="button"
                 class="btn btn-secondary"
-                on:click={handleCancel}
+                onclick={handleCancel}
                 disabled={isLoading}
             >
                 Cancel
@@ -404,7 +404,7 @@
             <button
                 type="submit"
                 class="btn btn-primary"
-                on:click={handleSave}
+                onclick={handleSave}
                 disabled={isLoading}
             >
                 <Save size={16} />

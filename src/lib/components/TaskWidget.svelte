@@ -239,13 +239,13 @@
     <div class="widget-header">
         <h2>Tasks</h2>
         <div class="header-actions">
-            <button class="btn btn-primary" on:click={() => {}}>
+            <button class="btn btn-primary" onclick={() => {}}>
                 <Plus size={16} />
                 Add Task
             </button>
             <button
                 class="btn btn-secondary"
-                on:click={loadTasks}
+                onclick={loadTasks}
                 disabled={isLoading}
             >
                 Refresh
@@ -257,8 +257,7 @@
     {#if error}
         <div class="error-message">
             {error}
-            <button on:click={() => (error = null)} class="error-close"
-                >×</button
+            <button onclick={() => (error = null)} class="error-close">×</button
             >
         </div>
     {/if}
@@ -270,7 +269,7 @@
                 <Filter size={16} />
                 Filters
             </h3>
-            <button class="btn-link" on:click={clearFilters}>Clear All</button>
+            <button class="btn-link" onclick={clearFilters}>Clear All</button>
         </div>
 
         <div class="filters-grid">
@@ -359,7 +358,7 @@
                 <div class="task-list-header">
                     <button
                         class="sort-button"
-                        on:click={() => handleSort("title")}
+                        onclick={() => handleSort("title")}
                     >
                         Title
                         {#if sortBy === "title"}
@@ -370,7 +369,7 @@
                     </button>
                     <button
                         class="sort-button"
-                        on:click={() => handleSort("priority")}
+                        onclick={() => handleSort("priority")}
                     >
                         Priority
                         {#if sortBy === "priority"}
@@ -381,7 +380,7 @@
                     </button>
                     <button
                         class="sort-button"
-                        on:click={() => handleSort("dueDate")}
+                        onclick={() => handleSort("dueDate")}
                     >
                         Due Date
                         {#if sortBy === "dueDate"}
@@ -392,7 +391,7 @@
                     </button>
                     <button
                         class="sort-button"
-                        on:click={() => handleSort("estimatedDuration")}
+                        onclick={() => handleSort("estimatedDuration")}
                     >
                         Estimated
                         {#if sortBy === "estimatedDuration"}
@@ -403,7 +402,7 @@
                     </button>
                     <button
                         class="sort-button"
-                        on:click={() => handleSort("actualDuration")}
+                        onclick={() => handleSort("actualDuration")}
                     >
                         Actual
                         {#if sortBy === "actualDuration"}
@@ -482,7 +481,7 @@
                 <Activity size={48} />
                 <p>{isLoading ? "Loading tasks..." : "No tasks found"}</p>
                 {#if !isLoading && tasks.length === 0}
-                    <button class="btn btn-primary" on:click={() => {}}>
+                    <button class="btn btn-primary" onclick={() => {}}>
                         <Plus size={16} />
                         Create your first task
                     </button>

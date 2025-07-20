@@ -44,40 +44,5 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
-  },
-  "capabilities": {
-    "default": {
-      "allowlist": {
-        "all": false,
-        "globalShortcut": {
-          "all": true
-        },
-        "window": {
-          "all": true
-        },
-        "systemTray": {
-          "all": true
-        },
-        "app": {
-          "all": true
-        },
-        "fs": {
-          "all": true,
-          "scope": [
-            "$APPDATA",
-            "$APPCONFIG",
-            "$APPCACHE"
-          ]
-        },
-        "http": {
-          "all": true,
-          "request": true,
-          "scope": [
-            "https://*",
-            "http://*"
-          ]
-        }
-      }
-    }
   }
 }

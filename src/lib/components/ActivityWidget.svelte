@@ -200,8 +200,7 @@
     {#if error}
         <div class="error-message">
             {error}
-            <button on:click={() => (error = null)} class="error-close"
-                >×</button
+            <button onclick={() => (error = null)} class="error-close">×</button
             >
         </div>
     {/if}
@@ -324,7 +323,7 @@
             {#if isRunning}
                 <button
                     class="btn btn-stop"
-                    on:click={handleStop}
+                    onclick={handleStop}
                     disabled={isStopping}
                 >
                     <Square size={16} />
@@ -333,7 +332,7 @@
             {:else}
                 <button
                     class="btn btn-start"
-                    on:click={handleStart}
+                    onclick={handleStart}
                     disabled={!canStart || isStarting}
                 >
                     <Play size={16} />
